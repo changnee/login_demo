@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -11,16 +13,42 @@ class AuthController extends Controller
         return view('login');
     }
 
+    public function showRegister()
+    {
+        return view('register');
+    }
+
+    public function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'username' => 'required|unique:users,username',
+            'password' => 'required|min:6'
+        ]);
+
+        User::create([
+            'name' => $request->name,
+            'username' => $request->username,
+            'password' => Hash::make($request->password)
+        ]);
+
+        return redirect('/login')
+            ->with('success', 'Đăng ký tài khoản thành công');
+    }
+
     public function login(Request $request)
     {
         $username = $request->username;
         $password = $request->password;
 
-        if ($username == 'admin' && $password == '123456')
-        {
+        $user = User::where('username', $username)->first();
+
+        if ($user && Hash::check($password, $user->password)) {
             session([
                 'isLogin' => true,
-                'username' => $username
+                'username' => $user->username,
+                'name' => $user->name,
+                'user_id' => $user->id
             ]);
 
             return redirect('/dashboard');
@@ -32,8 +60,7 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        if (!session('isLogin'))
-        {
+        if (!session('isLogin')) {
             return redirect('/login');
         }
 

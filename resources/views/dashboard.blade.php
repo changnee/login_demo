@@ -9,6 +9,11 @@
 
 <p>
     Xin chào:
+    {{ session('name') }}
+</p>
+
+<p>
+    Username:
     {{ session('username') }}
 </p>
 
